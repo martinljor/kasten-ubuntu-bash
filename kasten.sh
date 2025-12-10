@@ -3,7 +3,7 @@
 
 set -euo pipefail
 
-#K10_DEFAULT_VERSION="8.0.7"
+K10_DEFAULT_VERSION="8.0.7"
 K3S_KUBECONFIG="/etc/rancher/k3s/k3s.yaml"
 K10_PRIMER_BASE_URL="https://docs.kasten.io/downloads"
 
