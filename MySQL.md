@@ -73,7 +73,7 @@ EOF
 ## 7. Service + Deployment de MySQL
 
 `
-cat << 'EOF' > mysql-deploy-long.yaml
+cat << 'EOF' > mysql-deploy-long-svc.yaml
 apiVersion: v1
 kind: Service
 metadata:
@@ -86,7 +86,11 @@ spec:
       targetPort: 3306
   selector:
     app: mysql
----
+EOF
+`
+
+`
+cat << 'EOF' > mysql-deploy-long.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -123,6 +127,7 @@ EOF
 `
 `
 sudo kubectl apply -f mysql-pv-long.yaml
+sudo kubectl apply -f mysql-pv-long-svc.yaml
 sudo kubectl apply -f mysql-deploy-long.yaml
 `
 
