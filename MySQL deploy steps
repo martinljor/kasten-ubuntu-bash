@@ -1,0 +1,20 @@
+Stateless:
+kubectl create deployment kubernetes-bootcamp --image=gcr.io/google-samples/kubernetes-bootcamp:v1
+
+Statefull:
+# MySQL Steps
+Download YAML files: mysql-pv and mysql-deploy
+*validate IP address in mysql-deploy.yaml file, change it to match your IP address node.
+
+sudo kubectl apply -f mysql-pv.yaml
+sudo kubectl apply -f mysql-deploy.yaml
+
+sudo kubectl get pods -n mysql
+sudo kubectl get svc -n mysql
+sudo kubectl get pv -n mysql
+sudo kubectl get pvc -n mysql
+
+Access to mysql engine:
+sudo kubectl run -it --rm --image=mysql:9 --restart=Never mysql-client -- mysql -h mysql -ppassword
+*Validate mysql hostname. In the YAML file i used my node ip address: 192.168.1.122 (change it).
+
