@@ -1,0 +1,34 @@
+kind: Policy
+apiVersion: config.kio.kasten.io/v1alpha1
+metadata:
+  name: mysqlbkp
+  namespace: kasten-io
+  generation: 2
+  creationTimestamp: 2025-12-11T19:34:21Z
+spec:
+  frequency: "@daily"
+  retention:
+    daily: 1
+  selector:
+    matchExpressions:
+      - key: k10.kasten.io/appNamespace
+        operator: In
+        values:
+          - mysqlong
+  actions:
+    - action: backup
+      backupParameters:
+        filters: {}
+        profile:
+          name: minio
+          namespace: kasten-io
+    - action: export
+      exportParameters:
+        frequency: "@daily"
+        profile:
+          name: minio
+          namespace: kasten-io
+        exportData:
+          enabled: true
+      retention: {}
+
