@@ -22,3 +22,6 @@ Si te resultó útil, dejá una ⭐ en el repositorio.
 If you like this script, give me a ⭐ to the repo.
 
 Happy to help - MJ
+
+Si te animás a un poco más, puedes continuar con [MySQL + Kasten](./MySQL.md)
+If you're up for a bit more, you can continue with [MySQL + Kasten](./MySQL.md)
