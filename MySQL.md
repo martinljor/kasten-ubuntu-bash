@@ -3,18 +3,12 @@
 Este documento describe cómo instalar **Longhorn**, habilitar **CSI Snapshots**, desplegar **MySQL usando Longhorn**, y preparar el entorno para **backups con Veeam Kasten**.
 
 ## 1. Pre-requisitos en Ubuntu (nodo k3s) - Lo puedes instalar con el script kasten.sh
-`
+```
 sudo apt-get update
-`
-`
 sudo apt-get install -y open-iscsi nfs-common
-`
-`
 sudo systemctl enable iscsid
-`
-`
 sudo systemctl start iscsid
-`
+```
 
 ## 2. Instalar Longhorn
 `
