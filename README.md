@@ -21,6 +21,10 @@ Luego de instalar la VM, actualizar los paquetes: `sudo apt update && sudo apt u
 Si te resultó útil, dejá una ⭐ en el repositorio.
 If you like this script, give me a ⭐ to the repo.
 
+## Trabajando en una versión 2.0 / Working on a new version 2.0
+Dale una mirada / take a look
+[Kasten20](./Kasten20.md)
+
 Happy to help - MJ
 
 Si te animás a un poco más, puedes continuar con [MySQL + Kasten](./MySQL.md)
