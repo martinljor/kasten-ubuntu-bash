@@ -19,7 +19,7 @@ set -euo pipefail
 # ------------------------------
 # Variables
 # ------------------------------
-K10_DEFAULT_VERSION="8.0.7"
+K10_DEFAULT_VERSION="8.0.14"
 K3S_KUBECONFIG="/etc/rancher/k3s/k3s.yaml"
 K10_PRIMER_BASE_URL="https://docs.kasten.io/downloads"
 
@@ -106,9 +106,7 @@ wait_for_snapshot_controller() {
   kubectl --kubeconfig "$K3S_KUBECONFIG" get pods -n kube-system | grep snapshot || echo "  (puede tardar unos segundos en aparecer)"
 }
 
-# ------------------------------
-# Pasos (funciones)
-# ------------------------------
+
 validate_environment() {
   echo "==========================================="
   echo " Instalación All-in-One (K3s + Longhorn + MySQL + Kasten)"
@@ -229,7 +227,7 @@ install_longhorn_keep_as_is() {
 }
 
 install_snapshot_crds_and_class_keep_as_is() {
-  if ask_yes_no "¿Deseas instalar CRDs de CSI Snapshot + snapshot-controller + VolumeSnapshotClass (tal cual tu script actual)?" "y"; then
+  if ask_yes_no "¿Deseas instalar CRDs de CSI Snapshot + snapshot-controller + VolumeSnapshotClass?" "y"; then
     echo "Instalando CRDs de CSI Snapshot..."
     kubectl --kubeconfig "$K3S_KUBECONFIG" apply -f https://raw.githubusercontent.com/kubernetes-csi/external-snapshotter/master/client/config/crd/snapshot.storage.k8s.io_volumesnapshotclasses.yaml
     kubectl --kubeconfig "$K3S_KUBECONFIG" apply -f https://raw.githubusercontent.com/kubernetes-csi/external-snapshotter/master/client/config/crd/snapshot.storage.k8s.io_volumesnapshotcontents.yaml
@@ -259,14 +257,18 @@ EOF
 
     echo "VolumeSnapshotClass actuales:"
     kubectl --kubeconfig "$K3S_KUBECONFIG" get volumesnapshotclass
+    echo "#####"
+    echo "#####"
 
     echo "Validando que exista longhorn-snapclass..."
+    echo "#####"
     kubectl --kubeconfig "$K3S_KUBECONFIG" get volumesnapshotclass longhorn-snapclass >/dev/null 2>&1 || {
       echo "❌ No se encontró VolumeSnapshotClass 'longhorn-snapclass'."
       exit 1
     }
 
     echo "Validando anotación k10.kasten.io/is-snapshot-class=true..."
+    echo "#####"
     ANNOTATION_VALUE=$(kubectl --kubeconfig "$K3S_KUBECONFIG" get volumesnapshotclass longhorn-snapclass -o jsonpath='{.metadata.annotations.k10\.kasten\.io/is-snapshot-class}' || echo "")
     if [[ "$ANNOTATION_VALUE" != "true" ]]; then
       echo "❌ La VolumeSnapshotClass 'longhorn-snapclass' no tiene la anotación k10.kasten.io/is-snapshot-class=true."
@@ -303,7 +305,7 @@ remove_local_path_and_set_longhorn_default() {
 }
 
 install_mysql_keep_as_is() {
-  if ask_yes_no "¿Deseas instalar MySQL (namespace mysqlong, PVC Longhorn, Deployment tal cual tu script)?" "y"; then
+  if ask_yes_no "¿Deseas instalar MySQL (namespace mysqlong)?" "y"; then
     echo "Creando namespace 'mysqlong' (si no existe)..."
     if kubectl --kubeconfig "$K3S_KUBECONFIG" get namespace mysqlong >/dev/null 2>&1; then
       echo "✅ Namespace 'mysqlong' ya existe, se reutiliza."
@@ -412,7 +414,7 @@ EOF
 install_kasten_last() {
   echo
   echo "------------------------------"
-  echo " Kasten (último paso)"
+  echo "### Kasten ### "
   echo "------------------------------"
   echo
 
@@ -433,7 +435,7 @@ install_kasten_last() {
     fi
   fi
 
-  # jq (opcional)
+  # jq 
   if ask_yes_no "¿Deseas instalar el paquete 'jq' (recomendado)?" "y"; then
     echo "Instalando jq..."
     apt-get update -y
@@ -450,7 +452,7 @@ install_kasten_last() {
     fi
   fi
 
-  # Preflight (opcional)
+  # Preflight 
   if ask_yes_no "¿Deseas ejecutar el script pre-flight check --> k10_primer.sh ?" "y"; then
     read -r -p "Versión de Kasten para el primer [${K10_DEFAULT_VERSION}]: " K10_PRIMER_VERSION
     K10_PRIMER_VERSION="${K10_PRIMER_VERSION:-$K10_DEFAULT_VERSION}"
