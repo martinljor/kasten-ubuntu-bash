@@ -210,7 +210,7 @@ configure_kubeconfig_for_user() {
 }
 
 install_longhorn_keep_as_is() {
-  if ask_yes_no "¿Deseas instalar Longhorn (tal cual tu script actual)?" "y"; then
+  if ask_yes_no "¿Deseas instalar Longhorn?" "y"; then
     echo "Instalando dependencias (open-iscsi, nfs-common)..."
     apt-get update -y
     apt-get install -y open-iscsi nfs-common
@@ -397,13 +397,25 @@ EOF
     echo "Pods en el namespace 'mysqlong':"
     kubectl --kubeconfig "$K3S_KUBECONFIG" get pods -n mysqlong
 
-    echo "Probando conexión a MySQL dentro del pod (SHOW DATABASES)..."
-    kubectl --kubeconfig "$K3S_KUBECONFIG" exec -n mysqlong deploy/mysql -- mysql -u root -ppassword -e "SHOW DATABASES;" >/dev/null 2>&1 || {
-      echo "❌ No se pudo ejecutar 'SHOW DATABASES;' en MySQL."
-      echo "   Revisar el pod con:"
-      echo "   kubectl --kubeconfig $K3S_KUBECONFIG logs -n mysqlong deploy/mysql"
-      exit 1
-    }
+    echo "Esperan do que MySQL esté listo para aceptar conexiones..."
+MYSQL_POD=$(kubectl --kubeconfig "$K3S_KUBECONFIG" -n mysqlong get pod -l app=mysql -o jsonpath='{.items[0].metadata.name}')
+
+for i in {1..30}; do
+  if kubectl --kubeconfig "$K3S_KUBECONFIG" exec -n mysqlong "$MYSQL_POD" -- \
+       mysql -u root -ppassword -e "SELECT 1;" >/dev/null 2>&1; then
+    echo "✅ MySQL responde correctamente."
+    break
+  fi
+  echo "  MySQL aún no responde, reintentando en 5s... ($i/30)"
+  sleep 5
+done
+
+if ! kubectl --kubeconfig "$K3S_KUBECONFIG" exec -n mysqlong "$MYSQL_POD" -- \
+     mysql -u root -ppassword -e "SHOW DATABASES;" >/dev/null 2>&1; then
+  echo "❌ MySQL no respondió luego de esperar. Revisar logs:"
+  kubectl --kubeconfig "$K3S_KUBECONFIG" logs -n mysqlong "$MYSQL_POD"
+  exit 1
+fi
 
     echo "✅ MySQL listo y validado."
   else
