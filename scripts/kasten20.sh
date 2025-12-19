@@ -523,3 +523,16 @@ install_kasten_last() {
   echo "Happy to help - MJ."
 }
 
+
+# ------------------------------
+# MAIN - orden de ejecución
+# ------------------------------
+validate_environment
+install_helm
+install_k3s
+configure_kubeconfig_for_user
+install_longhorn_keep_as_is
+install_snapshot_crds_and_class_keep_as_is
+remove_local_path_and_set_longhorn_default
+install_mysql_keep_as_is
+install_kasten_last
