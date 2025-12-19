@@ -11,3 +11,5 @@ El paso a paso que se realiza en kaste20.sh es el siguiente:
 5. Eliminar CSI local-path y dejar Longhorn como default
 6. Instalar MySQL sobre Longhorn
 7. Instalar Kasten (último paso)
+
+Happy to help - MJ
