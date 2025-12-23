@@ -2,6 +2,10 @@
 # Instalación "all-in-one" para homeLab o demo:
 # validaciones -> helm -> k3s -> longhorn -> borrar local-path -> mysql -> kasten
 
+#Proximos pasos
+# Agregar espera luego de instalar Longhorn para que todos los pods queden en running.
+# Cambiar el mysql por el pacman para tener app + db
+
 echo "La idea del siguiente script es poder desarrollar la solución Veeam Kasten en un ambiente demo."
 echo "Si se realizan todos los pasos, es posible poder tener configurado un ambiente con App Mob + B&R + DRP"
 echo "Se utiliza el CSI Longhorn ya que tiene manejo automatico de creación de PV+PVC"
