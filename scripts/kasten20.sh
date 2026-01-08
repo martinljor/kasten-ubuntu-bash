@@ -108,11 +108,19 @@ wait_for_longhorn() {
 }
 
 wait_for_snapshot_controller() {
-  echo "Esperando snapshot-controller Ready (hasta 120s)..."
-  kubectl --kubeconfig "$K3S_KUBECONFIG" wait --for=condition=Ready pod -l app=snapshot-controller -n kube-system --timeout=120s || {
-    echo "⚠ snapshot-controller no llegó a Ready aún. Revisar con:"
-    echo "   kubectl --kubeconfig $K3S_KUBECONFIG get pods -n kube-system | grep snapshot"
-  }
+  echo "Esperando a que los pods de snapshot-controller estén en estado Running/Ready..."
+  while true; do
+    NOT_READY=$(kubectl --kubeconfig "$K3S_KUBECONFIG" -n kube-system get pods -l app=snapshot-controller --no-headers 2>/dev/null | awk '$3 != "Running" {print}')
+    if [[ -z "$NOT_READY" ]]; then
+      kubectl --kubeconfig "$K3S_KUBECONFIG" -n kube-system get pods -l app=snapshot-controller
+      echo "Todos los pods de snapshot-controller parecen estar running."
+      break
+    else
+      kubectl --kubeconfig "$K3S_KUBECONFIG" -n kube-system get pods -l app=snapshot-controller || true
+      echo " Aún hay pods que no estan listos, reintentando en 5s..."
+      sleep 5
+    fi
+  done
 
   echo "Pods relacionados a snapshot en kube-system:"
   kubectl --kubeconfig "$K3S_KUBECONFIG" get pods -n kube-system | grep snapshot || echo "  (puede tardar unos segundos en aparecer)"
