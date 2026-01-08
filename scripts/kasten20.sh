@@ -66,7 +66,7 @@ wait_for_nodes_ready() {
     sleep 5
   done
 
-  echo "✅ Nodo(s) de K3s en estado Ready."
+  echo "Nodo(s) de K3s en estado Ready."
 }
 
 wait_for_kasten_pods() {
@@ -158,13 +158,13 @@ validate_environment() {
   KUBE_USER="${KUBE_USER:-$DEFAULT_USER}"
 
   if ! id "$KUBE_USER" >/dev/null 2>&1; then
-    echo "❌ El usuario '$KUBE_USER' no existe en el sistema."
+    echo "El usuario '$KUBE_USER' no existe en el sistema."
     exit 1
   fi
 
   KUBE_HOME=$(eval echo "~$KUBE_USER")
   if [[ ! -d "$KUBE_HOME" ]]; then
-    echo "❌ No se encontró el home del usuario $KUBE_USER en $KUBE_HOME"
+    echo "No se encontró el home del usuario $KUBE_USER en $KUBE_HOME"
     exit 1
   fi
 
@@ -187,7 +187,7 @@ validate_environment() {
 install_helm() {
   if ask_yes_no "¿Deseas instalar/verificar Helm 3?" "y"; then
     if check_cmd helm; then
-      echo "✅ Helm ya está instalado."
+      echo "Helm ya está instalado."
     else
       echo "Instalando Helm 3..."
       curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
@@ -200,7 +200,7 @@ install_helm() {
 install_k3s() {
   if ask_yes_no "¿Deseas instalar/verificar K3s?" "y"; then
     if check_cmd k3s; then
-      echo "✅ K3s ya está instalado (se encontró el comando 'k3s')."
+      echo "K3s ya está instalado (se encontró el comando 'k3s')."
     else
       echo "Instalando K3s (curl -sfL https://get.k3s.io | sh)..."
       curl -sfL https://get.k3s.io | sh -
@@ -225,7 +225,7 @@ configure_kubeconfig_for_user() {
     mkdir -p /root/.kube
     KUBECONFIG="$K3S_KUBECONFIG" kubectl config view --raw > /root/.kube/config
 
-    echo "✅ kubeconfig configurado para $KUBE_USER y root."
+    echo "kubeconfig configurado para $KUBE_USER y root."
   fi
 }
 
@@ -239,7 +239,10 @@ install_longhorn_keep_as_is() {
 
     echo "Instalando Longhorn..."
     kubectl --kubeconfig "$K3S_KUBECONFIG" apply -f https://raw.githubusercontent.com/longhorn/longhorn/master/deploy/longhorn.yaml
-
+    echo "Patch para espacio reservado en 0"
+    sudo kubectl --kubeconfig "$K3S_KUBECONFIG" -n longhorn-system patch settings.longhorn.io storage-reserved-percentage-for-default-disk \
+    --type=merge -p '{"value":"0"}'
+    
     wait_for_longhorn
   else
     echo "⏭ Saltando instalación de Longhorn."
@@ -283,7 +286,7 @@ EOF
     echo "Validando que exista longhorn-snapclass..."
     echo "#####"
     kubectl --kubeconfig "$K3S_KUBECONFIG" get volumesnapshotclass longhorn-snapclass >/dev/null 2>&1 || {
-      echo "❌ No se encontró VolumeSnapshotClass 'longhorn-snapclass'."
+      echo "No se encontró VolumeSnapshotClass 'longhorn-snapclass'."
       exit 1
     }
 
@@ -291,7 +294,7 @@ EOF
     echo "#####"
     ANNOTATION_VALUE=$(kubectl --kubeconfig "$K3S_KUBECONFIG" get volumesnapshotclass longhorn-snapclass -o jsonpath='{.metadata.annotations.k10\.kasten\.io/is-snapshot-class}' || echo "")
     if [[ "$ANNOTATION_VALUE" != "true" ]]; then
-      echo "❌ La VolumeSnapshotClass 'longhorn-snapclass' no tiene la anotación k10.kasten.io/is-snapshot-class=true."
+      echo "La VolumeSnapshotClass 'longhorn-snapclass' no tiene la anotación k10.kasten.io/is-snapshot-class=true."
       exit 1
     fi
     echo "Snapshot CRDs + Controller + VolumeSnapshotClass listos."
@@ -317,7 +320,7 @@ remove_local_path_and_set_longhorn_default() {
         exit 1
       }
 
-    echo "✅ StorageClasses actuales:"
+    echo "StorageClasses actuales:"
     kubectl --kubeconfig "$K3S_KUBECONFIG" get storageclass
   else
     echo "⏭ Saltando eliminación de local-path."
@@ -328,7 +331,7 @@ install_mysql_keep_as_is() {
   if ask_yes_no "¿Deseas instalar MySQL (namespace mysqlong)?" "y"; then
     echo "Creando namespace 'mysqlong' (si no existe)..."
     if kubectl --kubeconfig "$K3S_KUBECONFIG" get namespace mysqlong >/dev/null 2>&1; then
-      echo "✅ Namespace 'mysqlong' ya existe, se reutiliza."
+      echo "Namespace 'mysqlong' ya existe, se reutiliza."
     else
       kubectl --kubeconfig "$K3S_KUBECONFIG" create namespace mysqlong
     fi
@@ -352,7 +355,7 @@ EOF
 
     echo "Esperando que el PVC mysql-pv-claim esté Bound (hasta 120s)..."
     kubectl --kubeconfig "$K3S_KUBECONFIG" wait --for=jsonpath='{.status.phase}'=Bound pvc/mysql-pv-claim -n mysqlong --timeout=120s || {
-      echo "❌ El PVC 'mysql-pv-claim' no llegó a estado Bound."
+      echo "El PVC 'mysql-pv-claim' no llegó a estado Bound."
       kubectl --kubeconfig "$K3S_KUBECONFIG" get pvc -n mysqlong || true
       exit 1
     }
@@ -409,7 +412,7 @@ EOF
 
     echo "Esperando rollout completo del Deployment mysql (hasta 180s)..."
     kubectl --kubeconfig "$K3S_KUBECONFIG" rollout status deployment/mysql -n mysqlong --timeout=180s || {
-      echo "❌ El Deployment 'mysql' no pudo completar el rollout correctamente."
+      echo "El Deployment 'mysql' no pudo completar el rollout correctamente."
       kubectl --kubeconfig "$K3S_KUBECONFIG" get pods -n mysqlong || true
       exit 1
     }
@@ -423,7 +426,7 @@ MYSQL_POD=$(kubectl --kubeconfig "$K3S_KUBECONFIG" -n mysqlong get pod -l app=my
 for i in {1..30}; do
   if kubectl --kubeconfig "$K3S_KUBECONFIG" exec -n mysqlong "$MYSQL_POD" -- \
        mysql -u root -ppassword -e "SELECT 1;" >/dev/null 2>&1; then
-    echo "✅ MySQL responde correctamente."
+    echo "MySQL responde correctamente."
     break
   fi
   echo "  MySQL aún no responde, reintentando en 5s... ($i/30)"
@@ -432,12 +435,12 @@ done
 
 if ! kubectl --kubeconfig "$K3S_KUBECONFIG" exec -n mysqlong "$MYSQL_POD" -- \
      mysql -u root -ppassword -e "SHOW DATABASES;" >/dev/null 2>&1; then
-  echo "❌ MySQL no respondió luego de esperar. Revisar logs:"
+  echo "MySQL no respondió luego de esperar. Revisar logs:"
   kubectl --kubeconfig "$K3S_KUBECONFIG" logs -n mysqlong "$MYSQL_POD"
   exit 1
 fi
 
-    echo "✅ MySQL listo y validado."
+    echo "MySQL listo y validado."
   else
     echo "⏭ Saltando instalación de MySQL."
   fi
@@ -477,7 +480,7 @@ install_kasten_last() {
   # Namespace
   if ask_yes_no "¿Deseas crear el namespace 'kasten-io'?" "y"; then
     if kubectl --kubeconfig "$K3S_KUBECONFIG" get ns kasten-io >/dev/null 2>&1; then
-      echo "✅ Namespace 'kasten-io' ya existe."
+      echo "Namespace 'kasten-io' ya existe."
     else
       echo "Creando namespace 'kasten-io'..."
       kubectl --kubeconfig "$K3S_KUBECONFIG" create ns kasten-io
@@ -514,7 +517,7 @@ install_kasten_last() {
   # Exponer gateway
   if ask_yes_no "¿Deseas configurar el servicio 'gateway' de Kasten como NodePort y utilizar el puerto 8080?" "y"; then
     if ! kubectl --kubeconfig "$K3S_KUBECONFIG" -n kasten-io get svc gateway >/dev/null 2>&1; then
-      echo "❌ No se encontró el servicio 'gateway' en el namespace 'kasten-io'."
+      echo "No se encontró el servicio 'gateway' en el namespace 'kasten-io'."
       echo "   Revisa que la instalación de Kasten se haya completado correctamente."
     else
       echo "Configurando gateway: NodePort, externalIPs=$SERVER_IP, http:8080->8000..."
@@ -535,7 +538,7 @@ install_kasten_last() {
               }
             }"
 
-      echo "✅ Servicio gateway actualizado:"
+      echo "Servicio gateway actualizado:"
       kubectl --kubeconfig "$K3S_KUBECONFIG" -n kasten-io get svc gateway -o wide
     fi
   else
