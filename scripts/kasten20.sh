@@ -240,9 +240,11 @@ install_longhorn_keep_as_is() {
     echo "Instalando Longhorn..."
     kubectl --kubeconfig "$K3S_KUBECONFIG" apply -f https://raw.githubusercontent.com/longhorn/longhorn/master/deploy/longhorn.yaml
     echo "Patch para espacio reservado en 0"
-    sudo kubectl --kubeconfig "$K3S_KUBECONFIG" -n longhorn-system patch settings.longhorn.io storage-reserved-percentage-for-default-disk \
-    --type=merge -p '{"value":"0"}'
-    
+    sudo kubectl --kubeconfig "$K3S_KUBECONFIG" -n longhorn-system patch configmap longhorn-default-setting \
+  --type=merge \
+  -p '{"data":{"storage-reserved-percentage-for-default-disk":"0"}}'
+
+
     wait_for_longhorn
   else
     echo "⏭ Saltando instalación de Longhorn."
