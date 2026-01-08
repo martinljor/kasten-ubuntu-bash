@@ -88,8 +88,8 @@ wait_for_kasten_pods() {
 wait_for_longhorn() {
   echo "Esperando que los pods de Longhorn estén Ready (hasta 300s)..."
   kubectl --kubeconfig "$K3S_KUBECONFIG" wait --for=condition=Ready pod --all -n longhorn-system --timeout=300s || {
-    echo "⚠ No todos los pods de Longhorn llegaron a Ready. Revisar con:"
-    echo "   kubectl --kubeconfig $K3S_KUBECONFIG -n longhorn-system get pods"
+    echo "No todos los pods de Longhorn llegaron a Ready. Revisar con:"
+    echo "kubectl --kubeconfig $K3S_KUBECONFIG -n longhorn-system get pods"
   }
 
   echo "Pods en longhorn-system:"
@@ -278,9 +278,9 @@ EOF
       echo "❌ La VolumeSnapshotClass 'longhorn-snapclass' no tiene la anotación k10.kasten.io/is-snapshot-class=true."
       exit 1
     fi
-    echo "✅ Snapshot CRDs + Controller + VolumeSnapshotClass listos."
+    echo "Snapshot CRDs + Controller + VolumeSnapshotClass listos."
   else
-    echo "⏭ Saltando Snapshot CRDs/Controller/VolumeSnapshotClass."
+    echo "Saltando Snapshot CRDs/Controller/VolumeSnapshotClass."
   fi
 }
 
@@ -296,7 +296,7 @@ remove_local_path_and_set_longhorn_default() {
     echo "Marcando Longhorn como StorageClass default..."
     kubectl --kubeconfig "$K3S_KUBECONFIG" patch storageclass longhorn \
       -p '{"metadata":{"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}' >/dev/null 2>&1 || {
-        echo "❌ No pude setear 'longhorn' como default. Verificá que exista el storageclass 'longhorn'."
+        echo "No pude setear 'longhorn' como default. Verificá que exista el storageclass 'longhorn'."
         kubectl --kubeconfig "$K3S_KUBECONFIG" get storageclass || true
         exit 1
       }
