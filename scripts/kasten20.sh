@@ -75,22 +75,30 @@ wait_for_kasten_pods() {
     NOT_READY=$(kubectl --kubeconfig "$K3S_KUBECONFIG" -n kasten-io get pods --no-headers 2>/dev/null | awk '$3 != "Running" && $3 != "Completed" {print}')
     if [[ -z "$NOT_READY" ]]; then
       kubectl --kubeconfig "$K3S_KUBECONFIG" -n kasten-io get pods
-      echo "✅ Todos los pods de Kasten parecen estar running."
+      echo "Todos los pods de Kasten parecen estar running."
       break
     else
       kubectl --kubeconfig "$K3S_KUBECONFIG" -n kasten-io get pods || true
-      echo "  Aún hay pods que no estan listos, reintentando en 5s..."
+      echo " Aún hay pods que no estan listos, reintentando en 5s..."
       sleep 5
     fi
   done
 }
 
 wait_for_longhorn() {
-  echo "Esperando que los pods de Longhorn estén Ready (hasta 300s)..."
-  kubectl --kubeconfig "$K3S_KUBECONFIG" wait --for=condition=Ready pod --all -n longhorn-system --timeout=300s || {
-    echo "No todos los pods de Longhorn llegaron a Ready. Revisar con:"
-    echo "kubectl --kubeconfig $K3S_KUBECONFIG -n longhorn-system get pods"
-  }
+  echo "Esperando a que los pods de Longhorn estén en estado Running/Ready..."
+  while true; do
+    NOT_READY=$(kubectl --kubeconfig "$K3S_KUBECONFIG" -n longhorn-system get pods --no-headers 2>/dev/null | awk '$3 != "Running" {print}')
+    if [[ -z "$NOT_READY" ]]; then
+      kubectl --kubeconfig "$K3S_KUBECONFIG" -n longhorn-system get pods
+      echo "Todos los pods de Longhorn parecen estar running."
+      break
+    else
+      kubectl --kubeconfig "$K3S_KUBECONFIG" -n longhorn-system get pods || true
+      echo " Aún hay pods que no estan listos, reintentando en 5s..."
+      sleep 5
+    fi
+  done
 
   echo "Pods en longhorn-system:"
   kubectl --kubeconfig "$K3S_KUBECONFIG" -n longhorn-system get pods
